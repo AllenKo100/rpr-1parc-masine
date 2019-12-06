@@ -1,0 +1,121 @@
+Za svrhu proizvodnje lijekova u apoteci potrebno je prije svega unijeti osnovne podatke aparata za doziranje
+(sifra, serijski broj), a zatim spisak svih sastojaka koje aparat moze dozirati
+(ovdje treba uzeti u vidu da nemaju svi aparati isti broj sastojaka koje mogu dozirati).
+
+Apoteka koristi digitalne i analogne aparate za doziranje.
+
+Sifra aparata se sastoji iskljucivo od velikih i malih slova alfabeta,
+sa ogranicenjem na duzinu koja mora biti minimalno 4 karaktera.
+
+Serijski broj aparata je pozitivan cijeli broj sa tacno 6 cifara (99999 < serijski < 1000000).
+
+Svi aparati su podeseni da svaki dan imaju odredjeni broj kredita koji se trose pri svakom doziranju.
+Svi aparati imaju 100 kredita dnevno.
+
+Svi aparati imaju operacije (* neke su date u klasi Apoteka neke ne kako bi imali TDD *) :
+
+- int getSerijski()
+    getter za serijski
+
+- void upali()
+    upali aparat, baci izuzetak tipa WrongDeviceState ako je vec upaljen. Pri paljenju aparat dobiva 100 kredita za rad.
+
+- void ugasi()
+    ugasi aparat, baci korisnicko definisani izuzetak tipa WrongDeviceState ako je vec ugasen
+
+- void fabrickiReset()
+    ugasi i upali aparat, resetuje broj kredita, baci korisnicko definisani izuzetak tipa WrongDeviceState ako je ugasen
+
+- int cijena(String sastojak)
+    vrati broj kredita koliko kosta doziranje datog sastojka, baci izuzetak tipa IllegalArgumentException ako se sastojak ne moze proizvesti
+
+- int doziraj(String sastojak)
+    proizvede jedan sastojak i vrati broj kredita koliko je doziranje trajala, baci izuzetak tipa IllegalArgumentException ako se sastojak
+    ne moze proizvesti ili nema dovoljno kredita na raspolaganju da se dati sastojak proizvede
+
+- int preostaloKredita()
+    vraca broj kredita koliko ova aparat jos moze raditi, vrati 0 ako je aparat ugasen
+
+- void registrujSastojak(String sifra, int cijena)
+    registruje da data aparat moze proizvesti navedeni sastojak pod odredjenom cijenom u kreditima
+
+- Set<String> dajSastojakeMoguceZaProizvesti()
+    vraca set koji sadrzi sifrae svih sastojka koje ova aparat moze proizvesti sa preostalim brojem radnih kredita,
+    set je abecedno sortiran
+
+- Map<String, Integer> dajMogucnostProizvodnje()
+    vraca novu mapu ciji je kljuc tipa string i predstavlja ime sastojka, a vrijednost je broj komada koliko se moze
+    proizvesti ako se ostatak vremena posveti samo proizvodnji ovog sastojka
+
+
+Analogni aparat pored navedenih operacija ima jos sljedece operacije:
+
+- void primjeniNoviCjenovnik()
+    postavlja aparat u rezim da koristi novi cjenovnik kredita pri doziranu,
+    baca korisnicko definisani izuzetak tipa WrongDeviceState ukoliko vec jeste u tom rezimu, u ovom rezimu
+    se svi sastojci doziraju za 2 kredita manje, s tim da cijena ne moze ici ispod 1
+
+- void primjeniStariCjenovnik()
+    vraca aparat u standardni rezim rada, baca korisnicko definisani izuzetak tipa WrongDeviceState ukoliko nije bila u rezimu novog cjenovnika
+
+
+Kod analognih aparata se kod svih racuna koji uzimaju u obzir cijenu kredita, uzima
+modificirana vrijednost u zavisnosti od rezima rada u kojem se nalazi.
+
+
+sastojak predstavljaju dva podatka: naziv (String) sastojka i cijena (u kreditima, od 1 do 85).
+
+Pri registraciji aparata i sastojaka trebaju se automatski izbaciti duplikati.
+Kao duplikat smatramo aparat sa istim serijskim brojem, odnosno aparate sa istim serijskim, neovisno o sifri i ostalim atributima.
+
+Ako uneseni APARAT vec postoji, podrazumjeva se da se prethodni unos "pregazi",
+cime zadnje unesene vrijednosti postaju aktuelne.
+
+Medjutim, ako uneseni SASTOJAK vec postoji, odbacuje se prosljedjeni podatak i ostaje ranije pohranjeni podatak!
+
+
+Kada se aparat ispise (npr System.out.println(a) gdje je a instanca klase Aparat), potrebno je sljedece ponasanje:
+
+"Aparat <sifra> je <"upaljen (preostalo N kredita)" ili "ugasen", zavisno da li je upaljen ili ne>. On moze proizvesti sastojke <spisak svih sastojka u obliku "sifra (cijena)", abecedno sortirani po sifrau>".
+
+Kada se apoteka ispise (npr System.out.println(a) gdje je a instanca klase Apoteka), potrebno je sljedece ponasanje:
+vraca novi string gdje izlistava sve aparate, uz redni broj ispred, npr. "1. <ispis aparata kao sto je prethodno opisano>"
+
+
+Finalno, potrebno je u klasi Apoteka implementirati sljedece metode:
+
+- Map<Aparat, String> najviseProizvoda()
+    vraca mapu gdje je kljuc aparat a vrijednost naziv sastojka koji taj aparat moze najvise proizvesti sa preostalim kreditima.
+    U mapi se izostavljaju ugaseni aparati. Aparate koji nemaju ni jednog sastojka registrovanog treba takodjer izostaviti.
+    Ukoliko ima vise sastojka koje za neki aparat ispunjavaju navedene uslove, uzima se onaj sastojak koji dolazi
+    prvi po alfabetskim sortiranjem. (npr ako aparat M moze proizvesti i sastojak bbc i bbd 8 puta danas, uzima se bbc)
+
+- Aparat dodajDigitalniAparat(String sifra, int serijski)
+    Registruje dati aparat u apoteci i vraca kreiranu instancu aparata
+    Pri registraciji aparat je ugasen.
+
+- Aparat dodajAnalogniAparat(String sifra, int serijski)
+    Registruje dati aparat u apoteci i vraca kreiranu instancu aparata
+    Pri registraciji aparat je ugasen.
+
+- void dodajSastojak(String sifraAparate, String sifraSastojka, int cijena)
+    Registruje dati sastojak u aparat sa proslijedjenom sifrom. Baca izuzetak tipa IllegalArgumentException ukoliko ne postoji.
+    Ukoliko ima vise aparata sa istim sifrom, sastojak se dodaje u sve aparate sa navedenim sifrom, neovisno o tome da li je upaljen ili ne.
+
+- Map<Aparat, Integer> cijenaZaSastojak(String sifra)
+    vraca mapu gdje je kljuc aparat a vrijednost cijena navedenog sastojka ukoliko se proizvodu na tom aparatu.
+    Ukoliko aparat nije u stanju da proizvede dati sastojak mapa ce sadrzati vrijednost -1,
+    a ukoliko je aparat ugasen nece se javiti unutar ove mape.
+
+- Set<Aparat> dajAparate(Function<Aparat, Boolean> filter)
+    Vraca set aparat sortiran po upotrebljivosti aparate za doziranje.
+    (jedini kriterij da je aparat A korisniji od aparata B je da ima veci izbor sastojka koje moze proizvesti
+     sa preostalim kreditima). Ukoliko ovaj kriterij zakljucuje da su dvije aparate iste, vrsi se dalji poredak po sifrau
+    (abecedno, sto je i defaultni poredak za String klasu).
+     Sortira se od najmanje vrijednosti do najvece (najmanji broj sastojka na pocetak, odnosno rastuci poredak).
+     Funkcija prima argument filter koji predstavlja pokazivac na funkciju.
+     Ukoliko je vrijednost ove varijable null, uzimaju se svi aparati u obzir.
+     Ukoliko vrijednost ove varijable nije null, uzimaju se samo oni aparati u obzir za koji poziv proslijedjene funkcije
+     vraca vrijednost true.
+
+     ** Obratite paznju da je ovo dinamican uslov redoslijeda **

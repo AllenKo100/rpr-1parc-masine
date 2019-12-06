@@ -1,0 +1,121 @@
+Za svrhu proizvodnje materijala u fabrici potrebno je prije svega unijeti osnovne podatke masina
+(naziv, serijski broj), a zatim spisak svih materijala koje masina moze proizvesti
+(ovdje treba uzeti u vidu da nemaju sve masine isti broj materijala koje mogu proizvesti).
+
+Fabrika koristi masine strane proizvodnje (kupljene), i masine koje su u fabrici proizveli za svoje potrebe
+(ThirdPartyMachine i FirstPartyMachine klase, ili PurchasedMachine i CustomMachine etc...)
+
+
+Naziv masine se sastoji iskljucivo od velikih i malih slova alfabeta,
+sa ogranicenjem na duzinu koja mora biti minimalno 2 karaktera.
+
+Serijski broj masine je pozitivan cijeli broj sa najvise 5 cifara (0 < serijski < 100000).
+
+Sve masine su ogranicene od strane proizvodjaca na 8 radnih sati dnevno.
+
+Sve masine imaju operacije (* neke su date u klasi Fabrika neke ne kako bi imali TDD *) :
+
+- int getSerijski()
+    getter za serijski
+
+- void upali()
+    upali masinu, baci izuzetak tipa WrongMachineState ako je vec upaljena. Pri paljenju masina dobiva 8 radnih sati za proizvodnju.
+
+- void ugasi()
+    ugasi masinu, baci korisnicko definisani izuzetak tipa WrongMachineState ako je vec ugasena
+
+- void resetuj()
+    ugasi i upali masinu, resetuje broj sati, baci korisnicko definisani izuzetak tipa WrongMachineState ako je ugasena
+
+- int cijena(String materijal)
+    vrati broj sati koliko kosta proizvodnja datog materijala, baci izuzetak tipa IllegalArgumentException ako se materijal ne moze proizvesti
+
+- int proizvedi(String materijal)
+    proizvede jedan materijal i vrati broj sati koliko je proizvodnja trajala, baci izuzetak tipa IllegalArgumentException ako se materijal
+    ne moze proizvesti ili nema dovoljno sati na raspolaganju da se dati materijal proizvede
+
+- int preostaloSati()
+    vraca broj sati koliko ova masina jos moze raditi, vrati 0 ako je masina ugasena
+
+- void registrujMaterijal(String naziv, int cijena)
+    registruje da data masina moze proizvesti navedeni materijal pod odredjenom cijenom u satima
+
+- Set<String> dajMaterijaleMoguceZaProizvesti()
+    vraca set koji sadrzi nazive svih materijala koje ova masina moze proizvesti sa preostalim brojem radnih sati,
+    set je abecedno sortiran
+
+- Map<String, Integer> dajMogucnostProizvodnje()
+    vraca novu mapu ciji je kljuc tipa string i predstavlja ime materijala, a vrijednost je broj komada koliko se moze
+    proizvesti ako se ostatak vremena posveti samo proizvodnji ovog materijala
+
+
+Masina domace proizvodnje pored navedenih operacija ima jos sljedece operacije:
+
+- void pocniBrziRad()
+    prebaca masinu u rezim brzog rada,baca korisnicko definisani izuzetak tipa WrongMachineState ukoliko vec jeste u tom rezimu, u ovom rezimu
+    se sve vremenske cijene smanje za 2, s tim da ne mogu ici ispod 1
+
+- void zaustaviBrziRad()
+    vraca masinu u standardni rezim rada, baca korisnicko definisani izuzetak tipa WrongMachineState ukoliko nije bila u rezimu brzog rada
+
+
+Kod domacih masina se kod svih racuna koji uzimaju u obzir trajanje, uzima
+modificirana vrijednost u zavisnosti od rezima rada u kojem se nalazi.
+
+
+Materijal predstavljaju dva podatka: naziv (String) materijala i cijena (u satima, od 1 do 5).
+
+Pri registraciji masina i materijala trebaju se automatski izbaciti duplikati.
+Kao duplikat smatramo masinu sa istim serijskim brojem, odnosno masine sa istim serijskim, neovisno o nazivu i ostalim atributima.
+
+Ako unesena MASINA vec postoji, podrazumjeva se da se prethodni unos "pregazi",
+cime zadnje unesene vrijednosti postaju aktuelne.
+
+Medjutim, ako uneseni MATERIJAL vec postoji, odbacuje se prosljedjeni podatak i ostaje ranije pohranjeni podatak!
+
+
+Kada se masina ispise (npr System.out.println(m) gdje je m instanca klase Masina), potrebno je sljedece ponasanje:
+
+"Masina <naziv> je <"upaljena (preostalo N sati)" ili "ugasena", zavisno da li je upaljena ili ne>. Ona moze proizvesti materijale <spisak svih materijala u obliku "naziv (cijena)", abecedno sortirani po nazivu>".
+
+Kada se fabrika ispise (npr System.out.println(f) gdje je f instanca klase Fabrika), potrebno je sljedece ponasanje:
+vraca novi string gdje izlistava sve masine, uz redni broj ispred, npr. "1. <ispis masine kao sto je prethodno opisano>"
+
+
+Finalno, potrebno je u klasi Fabrika implementirati sljedece metode:
+
+- Map<Masina, String> najviseProizvoda()
+    vraca mapu gdje je kljuc masina a vrijednost naziv materijala koji ta masina moze najvise proizvesti danas. u mapi se izostavljaju ugasene masine.
+    Masine koje nemaju ni jednog materijala registrovanog treba takodjer izostaviti.
+    Ukoliko ima vise materijala koje za neku masinu ispunjavaju navedene uslove, uzima se onaj materijal koji dolazi
+    prvi po alfabetskim sortiranjem. (npr ako masina M moze proizvesti i materijal m1 i m2 8 puta danas, uzima se m1)
+
+- Masina dodajDomacuMasinu(String naziv, int serijski)
+    Registruje datu masinu u fabriku i vraca kreiranu instancu masine
+    Pri registraciji masina je ugasena.
+
+- Masina dodajKupljenuMasinu(String naziv, int serijski)
+    Registruje datu masinu u fabriku i vraca kreiranu instancu masine
+    Pri registraciji masina je ugasena.
+
+- void dodajMaterijal(String nazivMasine, String nazivMaterijala, int cijena)
+    Registruje dati materijal u masinu sa proslijedjenim nazivom. Baca izuzetak tipa IllegalArgumentException ukoliko ne postoji.
+    Ukoliko ima vise masina sa istim nazivom, materijal se dodaje u sve masine sa navedenim nazivom, neovisno o tome da li je upaljena ili ne.
+
+- Map<Masina, Integer> cijenaZaMaterijal(String naziv)
+    vraca mapu gdje je kljuc masina a vrijednost cijena navedenog materijala ukoliko se proizvodu na toj masini.
+    Ukoliko masina nije u stanju da proizvede dati materijal mapa ce sadrzati -1,
+    a ukoliko je masina ugasena nece se javiti unutar ove mape.
+
+- Set<Masina> dajMasine()
+    Vraca set masina sortiran po upotrebljivosti masine za proizvodnju.
+    (jedini kriterij da je masina A korisnija od masine B je da ima veci izbor materijala koje moze proizvesti
+     sa preostalim satima). Ukoliko ovaj kriterij zakljucuje da su dvije masine iste, vrsi se dalji poredak po nazivu
+    (abecedno, sto je i defaultni poredak za String klasu).
+     Sortira se od najmanje vrijednosti do najvece (najmanji broj materijala na pocetak, odnosno rastuci poredak).
+    Funkcija prima argument filter koji predstavlja pokazivac na funkciju.
+     Ukoliko je vrijednost ove varijable null, uzimaju se sve masine u obzir.
+     Ukoliko vrijednost ove varijable nije null, uzimaju se samo one masine u obzir za koji poziv proslijedjene funkcije
+     vraca vrijednost true.
+
+     ** Obratite paznju da je ovo dinamican uslov redoslijeda **
